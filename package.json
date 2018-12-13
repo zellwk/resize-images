@@ -1,0 +1,22 @@
+{
+  "name": "@zellwk/resize-images",
+  "version": "1.0.0",
+  "description": "Resizes images. Suitable for use directly in Node, or with a Gulp workflow",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --watch"
+  },
+  "author": "Zell Liew",
+  "license": "MIT",
+  "dependencies": {
+    "del": "^3.0.0",
+    "denodeify": "^1.2.1",
+    "glob": "^7.1.3",
+    "mkdirp": "^0.5.1",
+    "sharp": "^0.21.1"
+  },
+  "devDependencies": {
+    "jest": "^23.6.0",
+    "np": "^3.0.4"
+  }
+}
