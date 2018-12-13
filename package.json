@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --watch",
-    "prepublish": "jest",
-    "release": "np"
+    "preversion": "jest",
+    "release": "np --yolo"
   },
   "author": "Zell Liew",
   "license": "MIT",
