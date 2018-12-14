@@ -1,6 +1,6 @@
 {
   "name": "@zellwk/resize-images",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Resizes images. Suitable for use directly in Node, or with a Gulp workflow",
   "main": "index.js",
   "scripts": {
