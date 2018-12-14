@@ -13,7 +13,8 @@ test('Create output directories', async done => {
   await del(outputDir)
   await resizer({
     inputDir,
-    outputDir
+    outputDir,
+    outputSizes: []
   })
 
   expect(await stat(outputDir)).toBeTruthy()

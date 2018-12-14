@@ -8,6 +8,7 @@ const glob = denodeify(require('glob'))
 const mkdir = denodeify(require('mkdirp'))
 const fsStat = denodeify(fs.stat).bind(fs)
 const execFile = denodeify(require('child_process').execFile)
+
 /**
  * Make output directories.
  * Required for Sharp, because Sharp errors if directory doesn't exist
@@ -75,12 +76,24 @@ const getOutputPath = ({
   return path.resolve(dir, base + size + ext)
 }
 
-const resize = async ({
+const resizer = async ({
   inputDir,
   outputDir,
-  outputSizes = [],
+  outputSizes,
   exts = ['jpg', 'webp', 'png', 'jpeg', 'gif']
 }) => {
+  if (!inputDir) {
+    throw Error('Please provide input directory')
+  }
+
+  if (!outputDir) {
+    throw Error('Please provide output directory')
+  }
+
+  if (!Array.isArray(outputSizes)) {
+    throw Error('No outputSizes configured')
+  }
+
   const extensions = exts.join(',')
   const inputPaths = await glob(inputDir + `/**/*.{${extensions}}`)
   const files = await Promise.all(inputPaths.map(async inputPath => {
@@ -145,4 +158,4 @@ const resizeWithSharp = (file, meta) => {
   return s.toFile(path)
 }
 
-module.exports = resize
+module.exports = resizer

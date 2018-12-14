@@ -11,14 +11,51 @@ const getStats = async (...parts) => {
   return stat(path.resolve(...parts))
 }
 
-test('Copies original files to destination', async done => {
-  const inputDir = 'test/create-files/input'
-  const outputDir = 'test/create-files/output'
+const inputDir = 'test/create-files/input'
+const outputDir = 'test/create-files/output'
 
+test('Throws error when outputSizes not configured', async done => {
+  try {
+    await resizer({ inputDir, outputDir })
+  } catch (error) {
+    expect(error.message).toEqual(expect.stringMatching(/No outputSizes configured/))
+  }
+
+  // cleanup
+  await del(outputDir)
+  done()
+})
+
+test('Throws error when input directory not configured', async done => {
+  try {
+    await resizer({ outputDir, outputSizes: [] })
+  } catch (error) {
+    expect(error.message).toEqual(expect.stringMatching(/input directory/))
+  }
+
+  // cleanup
+  await del(outputDir)
+  done()
+})
+
+test('Throws error when output directory not configured', async done => {
+  try {
+    await resizer({ inputDir, outputSizes: [] })
+  } catch (error) {
+    expect(error.message).toEqual(expect.stringMatching(/output directory/))
+  }
+
+  // cleanup
+  await del(outputDir)
+  done()
+})
+
+test('Copies original files to destination', async done => {
   await del(outputDir)
   await resizer({
     inputDir,
-    outputDir
+    outputDir,
+    outputSizes: [500, 1000]
   })
 
   const small = await getStats(outputDir, 'small.png')
@@ -31,9 +68,6 @@ test('Copies original files to destination', async done => {
 })
 
 test('Create files with smaller widths compared to original files', async done => {
-  const inputDir = 'test/create-files/input'
-  const outputDir = 'test/create-files/output'
-
   await resizer({
     inputDir,
     outputDir,
@@ -60,9 +94,6 @@ test('Create files with smaller widths compared to original files', async done =
 })
 
 test('Supports GIFs', async done => {
-  const inputDir = 'test/create-files/input'
-  const outputDir = 'test/create-files/output'
-
   await resizer({
     inputDir,
     outputDir,
