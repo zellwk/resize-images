@@ -58,3 +58,39 @@ test('Create files with smaller widths compared to original files', async done =
   await del(outputDir)
   done()
 })
+
+test('Supports GIFs', async done => {
+  const inputDir = 'test/create-files/input'
+  const outputDir = 'test/create-files/output'
+
+  await resizer({
+    inputDir,
+    outputDir,
+    outputSizes: [500, 1000]
+  })
+
+  // Should copy GIFs
+  const gif = await getStats(outputDir, 'gif.gif')
+  const { width: gifWidth } = await sharp(path.resolve(outputDir, 'gif.gif'))
+    .metadata()
+  expect(gif).toBeTruthy()
+  expect(gifWidth).toEqual(750)
+
+  // Should create GIFs with smaller widths
+  const gif2 = await getStats(outputDir, 'gif-500.gif')
+  const { width: gif2Width } = await sharp(path.resolve(outputDir, 'gif-500.gif'))
+    .metadata()
+  expect(gif2).toBeTruthy()
+  expect(gif2Width).toEqual(500)
+
+  // Should not create GIFs with larger widths
+  try {
+    await getStats(outputDir, 'gif-1000.gif')
+  } catch (err) {
+    expect(err.message).toEqual(expect.stringMatching(/ENOENT/))
+  }
+
+  // cleanup
+  await del(outputDir)
+  done()
+})

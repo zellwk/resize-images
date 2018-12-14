@@ -1,12 +1,13 @@
 const path = require('path')
 const fs = require('fs')
 const sharp = require('sharp')
+const gifsicle = require('gifsicle')
 
 const denodeify = require('denodeify')
 const glob = denodeify(require('glob'))
 const mkdir = denodeify(require('mkdirp'))
 const fsStat = denodeify(fs.stat).bind(fs)
-
+const execFile = denodeify(require('child_process').execFile)
 /**
  * Make output directories.
  * Required for Sharp, because Sharp errors if directory doesn't exist
@@ -78,13 +79,14 @@ const resize = async ({
   inputDir,
   outputDir,
   outputSizes = [],
-  exts = ['jpg', 'webp', 'png', 'jpeg']
+  exts = ['jpg', 'webp', 'png', 'jpeg', 'gif']
 }) => {
   const extensions = exts.join(',')
   const inputPaths = await glob(inputDir + `/**/*.{${extensions}}`)
-  let files = await Promise.all(inputPaths.map(async inputPath => {
+  const files = await Promise.all(inputPaths.map(async inputPath => {
     const f = { inputDir, outputDir, inputPath }
     const { width } = await sharp(inputPath).metadata()
+    const isGIF = path.extname(inputPath).includes('gif')
     const sizesToCreate = getOutputSizes(outputSizes, width)
 
     // Creates an array of sizes to create
@@ -106,7 +108,8 @@ const resize = async ({
       inputDir,
       inputPath,
       outputDir,
-      toOutput
+      toOutput,
+      isGIF
     }
   }))
 
@@ -115,19 +118,31 @@ const resize = async ({
 
   // Skips unmodified files
   const filesToResize = await getFilesToModify(files)
-  // console.log(filesToResize)
 
   // Creates files
   await Promise.all(filesToResize.map(file => {
-    return Promise.all(file.toOutput.map(async meta => {
-      const s = sharp(file.inputPath)
-      return meta.shouldResize
-        ? s
-          .resize({ width: meta.size })
-          .toFile(meta.path)
-        : s.toFile(meta.path)
+    return Promise.all(file.toOutput.map(meta => {
+      return file.isGIF
+        ? resizeGIF(file, meta)
+        : resizeWithSharp(file, meta)
     }))
   }))
+}
+
+const resizeGIF = (file, meta) => {
+  const { shouldResize, size, path } = meta
+  let opts = ['--output', path]
+  if (shouldResize) opts = opts.concat('--resize-width', size)
+  opts.push(file.inputPath)
+
+  return execFile(gifsicle, opts)
+}
+
+const resizeWithSharp = (file, meta) => {
+  const { shouldResize, size: width, path } = meta
+  let s = sharp(file.inputPath)
+  if (shouldResize) s = s.resize({ width })
+  return s.toFile(path)
 }
 
 module.exports = resize
